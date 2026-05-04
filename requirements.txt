@@ -1,0 +1,89 @@
+Here's exactly what you need to install and do, in order:
+1. Install System Dependencies
+MySQL
+- Download: https://dev.mysql.com/downloads/installer/
+- During install, remember the root password you set
+- After install, open MySQL Command Line and run:
+mysql -u root -p
+# Then paste the contents of C:/moses_project/kosora-app/database/schema.sql
+# Or run:
+source C:/moses_project/kosora-app/database/schema.sql
+Node.js
+- Download: https://nodejs.org/ (v18 LTS or newer)
+- Verify: node -v and npm -v
+Python 3.9+
+- Download: https://www.python.org/downloads/
+- Important: Check "Add Python to PATH" during install
+- Verify: python --version
+Tesseract OCR
+- Download: https://github.com/UB-Mannheim/tesseract/wiki
+- During install, copy the install path (usually C:\Program Files\Tesseract-OCR)
+- Add it to PATH or set in scanner code
+Ollama
+- Download: https://ollama.ai/download (Windows)
+- After install, open terminal and run:
+ollama pull llama3
+- This downloads the AI model (~4GB). It runs automatically as a background service on http://localhost:11434
+2. Install Project Dependencies
+# Server dependencies
+cd C:/moses_project/kosora-app/server
+npm install
+# Client dependencies
+cd C:/moses_project/kosora-app/client
+npm install
+# Python scanner dependencies
+cd C:/moses_project/kosora-app/scanner
+pip install -r requirements.txt
+3. Configure Environment
+Edit C:/moses_project/kosora-app/server\.env:
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_root_password
+DB_NAME=kosora_db
+JWT_SECRET=change_this_to_a_random_string
+4. Fix Tesseract Path (Windows)
+In C:/moses_project/kosora-app/scanner/server.py, add this at the top (after imports) if Tesseract isn't in your PATH:
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+# Questions
+Should I add the Tesseract path to the scanner server.py file?
+Yes, add it (Recommended)
+Thinking: Add the Tesseract path to the scanner server.py file.
+→ Read C:/moses_project/kosora-app/scanner/server.py [limit=15, offset=1]
+Thinking: Add the Tesseract path after the imports in server.py.
+← Edit C:/moses_project/kosora-app/scanner/server.py
+import os
+from werkzeug.utils import secure_filename
+import pytesseract
+app = Flask(__name__)
+CORS(app)
+UPLOAD_FOLDER = './uploads'
+Thinking: Tesseract path is added. Now give the user the final summary of commands to run everything.
+Done. Here's the final summary of everything to install and the commands to run:
+Install Checklist
+Software	Download Link
+MySQL	https://dev.mysql.com/downloads/installer/ (https://dev.mysql.com/downloads/installer/)
+Node.js v18+	https://nodejs.org/ (https://nodejs.org/)
+Python 3.9+	https://www.python.org/downloads/ (https://www.python.org/downloads/)
+Tesseract OCR	https://github.com/UB-Mannheim/tesseract/wiki (https://github.com/UB-Mannheim/tesseract/wiki)
+Ollama	https://ollama.ai/download (https://ollama.ai/download)
+Setup Commands (run in order)
+# 1. Create database (after MySQL is installed)
+mysql -u root -p < C:/moses_project/kosora-app/database/schema.sql
+# 2. Edit server\.env with your MySQL password
+# 3. Install all dependencies
+cd C:/moses_project/kosora-app/server && npm install
+cd C:/moses_project/kosora-app/client && npm install
+cd C:/moses_project/kosora-app/scanner && pip install -r requirements.txt
+# 4. Pull AI model (one-time)
+ollama pull llama3
+Run Commands (open 3 terminals)
+# Terminal 1 - Backend API (port 5000)
+cd C:/moses_project/kosora-app/server
+npm run dev
+# Terminal 2 - Frontend (port 3000)
+cd C:/moses_project/kosora-app/client
+npm run dev
+# Terminal 3 - OMR Scanner (port 5001)
+cd C:/moses_project/kosora-app/scanner
+python server.py
+Then open http://localhost:3000 in your browser.
