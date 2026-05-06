@@ -22,9 +22,9 @@ const Register = () => {
     setLoading(true);
     try {
       const { confirmPassword, ...data } = form;
-      const user = await register(data);
+      await register(data);
       toast.success('Registration successful!');
-      navigate(`/${roleToPath(user.role)}/dashboard`, { replace: true });
+      window.location.href = '/';
     } catch (err) {
       toast.error(err.response?.data?.error || 'Registration failed');
     } finally {

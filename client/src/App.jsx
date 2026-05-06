@@ -24,6 +24,9 @@ import Scanning from './pages/teacher/Scanning';
 import Results from './pages/teacher/Results';
 import StudentDashboard from './pages/student/Dashboard';
 import StudentResults from './pages/student/Results';
+import Home from './pages/Home';
+import Apply from './pages/Apply';
+import Applications from './pages/super-admin/Applications';
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen">
@@ -46,8 +49,10 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to={`/${roleToPath(role)}/dashboard`} replace /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to={`/${roleToPath(role)}/dashboard`} replace /> : <Register />} />
+      <Route path="/" element={user ? <Navigate to={`/${roleToPath(role)}/dashboard`} replace /> : <Home />} />
+      <Route path="/apply" element={<Apply />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
       <Route path="/super-admin/*" element={
         <ProtectedRoute allowedRoles={['super_admin']}>
@@ -55,6 +60,7 @@ function App() {
             <Routes>
               <Route path="dashboard" element={<SuperAdminDashboard />} />
               <Route path="schools" element={<Schools />} />
+              <Route path="applications" element={<Applications />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />
@@ -111,7 +117,6 @@ function App() {
         </ProtectedRoute>
       } />
 
-      <Route path="/" element={<Navigate to={user ? `/${roleToPath(role)}/dashboard` : '/login'} replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

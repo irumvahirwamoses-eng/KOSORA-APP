@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   FiHome, FiFile, FiUsers, FiBarChart2, FiCamera,
   FiUpload, FiSettings, FiLogOut, FiMenu, FiX, FiAward, FiClipboard,
-  FiTrendingUp, FiDollarSign, FiBookOpen, FiUserCheck
+  FiTrendingUp, FiDollarSign, FiBookOpen, FiUserCheck, FiInbox
 } from 'react-icons/fi';
 
 const Layout = ({ children, role }) => {
@@ -24,6 +24,7 @@ const Layout = ({ children, role }) => {
         return [
           { path: '/super-admin/dashboard', icon: FiHome, label: 'Dashboard' },
           { path: '/super-admin/schools', icon: FiBookOpen, label: 'Schools' },
+          { path: '/super-admin/applications', icon: FiInbox, label: 'Applications' },
           { path: '/super-admin/analytics', icon: FiBarChart2, label: 'Analytics' },
           { path: '/super-admin/settings', icon: FiSettings, label: 'Settings' },
           { path: '/super-admin/profile', icon: FiUserCheck, label: 'Profile' },

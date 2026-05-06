@@ -47,22 +47,27 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const [users] = await db.query(
-      'SELECT id, school_id, name, email, password_hash, phone, role, avatar_url, is_active FROM users WHERE email = ?',
+      'SELECT u.id, u.school_id, u.name, u.email, u.password_hash, u.phone, u.role, u.avatar_url, u.is_active, s.name as school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.email = ?',
       [email]
     );
 
     if (users.length === 0) {
+      console.log('Login failed: User not found for email:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     const user = users[0];
+    console.log('User found:', { id: user.id, email: user.email, role: user.role, is_active: user.is_active });
 
-    if (!user.is_active) {
+    if (user.is_active === false || user.is_active === 0) {
+      console.log('Login failed: Account deactivated for user:', email);
       return res.status(403).json({ error: 'Account is deactivated' });
     }
 
     const isValid = await bcrypt.compare(password, user.password_hash);
+    console.log('Password comparison result:', isValid);
     if (!isValid) {
+      console.log('Login failed: Invalid password for user:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -80,6 +85,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         schoolId: user.school_id,
+        schoolName: user.school_name,
         phone: user.phone,
         avatarUrl: user.avatar_url
       },
@@ -95,7 +101,7 @@ exports.getProfile = async (req, res) => {
   const db = getDb();
   try {
     const [users] = await db.query(
-      'SELECT id, school_id, name, email, phone, role, avatar_url, is_active, created_at FROM users WHERE id = ?',
+      'SELECT u.id, u.school_id, u.name, u.email, u.phone, u.role, u.avatar_url, u.is_active, u.created_at, s.name as school_name FROM users u LEFT JOIN schools s ON u.school_id = s.id WHERE u.id = ?',
       [req.user.id]
     );
 

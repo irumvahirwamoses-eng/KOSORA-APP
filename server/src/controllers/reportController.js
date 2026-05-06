@@ -45,10 +45,10 @@ exports.getStudentPerformance = async (req, res) => {
     const studentId = req.params.studentId;
 
     const [studentInfo] = await db.query(
-      'SELECT u.name, s.student_code, c.name as class_name ' +
+      'SELECT u.name, s.student_code, c.name as class_name, s.id as students_id ' +
       'FROM students s JOIN users u ON s.user_id = u.id JOIN classes c ON s.class_id = c.id ' +
-      'WHERE s.id = ?',
-      [studentId]
+      'WHERE s.user_id = ? AND u.school_id = ?',
+      [studentId, req.user.schoolId]
     );
 
     if (studentInfo.length === 0) {
@@ -60,9 +60,9 @@ exports.getStudentPerformance = async (req, res) => {
       'FROM exam_answers ea ' +
       'JOIN exams e ON ea.exam_id = e.id ' +
       'JOIN subjects s ON e.subject_id = s.id ' +
-      'WHERE ea.student_id = ? ' +
+      'WHERE ea.student_id = ? AND e.school_id = ? ' +
       'ORDER BY e.academic_year DESC, e.term DESC, e.created_at DESC',
-      [studentId]
+      [studentInfo[0].students_id, req.user.schoolId]
     );
 
     const subjectAverages = {};

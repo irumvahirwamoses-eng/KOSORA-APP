@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const [stats, setStats] = useState({ totalStudents: 0, totalTeachers: 0, totalExams: 0, totalMaterials: 0 });
   const [recentExams, setRecentExams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +25,10 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">School Admin Dashboard</h2>
+      <div>
+        <h2 className="text-2xl font-bold">{user?.schoolName ? `${user.schoolName} - Admin Dashboard` : 'School Admin Dashboard'}</h2>
+        <p className="text-gray-500 mt-1">Welcome, {user?.name}</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Students', value: stats.totalStudents, color: 'blue', link: '/admin/students' },

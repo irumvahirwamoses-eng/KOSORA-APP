@@ -166,3 +166,12 @@ ollama serve
 ## License
 
 MIT
+
+
+
+accounts:
+
+super-admin: admin@kosora.com,admin123,
+epmuganza school: epmuganza@gmail.com.epmuganza123,
+stkizito school: moses@gmail.com,moses@2008
+students: email,student123

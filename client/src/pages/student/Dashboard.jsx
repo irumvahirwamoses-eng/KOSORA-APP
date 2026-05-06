@@ -24,7 +24,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Welcome, {user?.name}</h2>
+      <h2 className="text-2xl font-bold">Welcome, {user?.name} {user?.schoolName ? `— ${user.schoolName}` : ''}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Link to="/student/results" className="bg-white rounded-xl shadow-sm border p-6 hover:shadow-md cursor-pointer">
           <h3 className="font-semibold text-lg mb-2">My Results</h3>

@@ -32,7 +32,8 @@ const StudentManagement = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/students', { ...form, schoolId: null });
+      const { schoolId, ...data } = form;
+      await api.post('/api/students', data);
       toast.success('Student created (default password: student123)');
       setShowModal(false);
       setForm({ name: '', email: '', phone: '', classId: '', enrollmentDate: '', parentName: '', parentPhone: '' });

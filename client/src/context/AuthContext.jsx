@@ -56,6 +56,20 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const res = await api.get('/api/auth/profile');
+      setUser(res.data.user);
+    } catch {
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+      setUser(null);
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -63,6 +77,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
+      refreshUser,
       isAuthenticated: !!user,
       role: user?.role || null,
     }}>

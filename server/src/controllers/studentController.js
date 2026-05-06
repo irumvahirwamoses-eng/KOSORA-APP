@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 exports.createStudent = async (req, res) => {
   const db = getDb();
   try {
-    const { schoolId, name, email, phone, classId, enrollmentDate, parentName, parentPhone } = req.body;
+    const { name, email, phone, classId, enrollmentDate, parentName, parentPhone } = req.body;
 
     const [existingEmail] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existingEmail.length > 0) {
@@ -16,13 +16,17 @@ exports.createStudent = async (req, res) => {
       return res.status(404).json({ error: 'Class not found' });
     }
 
-    const studentCode = `${classes[0].school_id}-${classId}-${Date.now().toString(36).toUpperCase()}`;
+    if (classes[0].school_id !== req.user.schoolId) {
+      return res.status(403).json({ error: 'Cannot add student to another school class' });
+    }
+
+    const studentCode = `${req.user.schoolId}-${classId}-${Date.now().toString(36).toUpperCase()}`;
 
     const defaultPassword = await bcrypt.hash('student123', 10);
 
     const [userResult] = await db.query(
       'INSERT INTO users (school_id, name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
-      [schoolId, name, email, defaultPassword, phone, 'student']
+      [req.user.schoolId, name, email, defaultPassword, phone, 'student']
     );
 
     await db.query(
@@ -47,13 +51,13 @@ exports.getStudents = async (req, res) => {
     const { classId, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT s.*, u.name, u.email, u.phone, u.is_active, c.name as class_name FROM students s JOIN users u ON s.user_id = u.id JOIN classes c ON s.class_id = c.id';
-    let countQuery = 'SELECT COUNT(*) as total FROM students s JOIN users u ON s.user_id = u.id';
-    const params = [];
+    let query = 'SELECT s.*, u.name, u.email, u.phone, u.is_active, c.name as class_name FROM students s JOIN users u ON s.user_id = u.id JOIN classes c ON s.class_id = c.id WHERE u.school_id = ?';
+    let countQuery = 'SELECT COUNT(*) as total FROM students s JOIN users u ON s.user_id = u.id WHERE u.school_id = ?';
+    const params = [req.user.schoolId];
 
     if (classId) {
-      query += ' WHERE s.class_id = ?';
-      countQuery += ' WHERE s.class_id = ?';
+      query += ' AND s.class_id = ?';
+      countQuery += ' AND s.class_id = ?';
       params.push(classId);
     }
 
@@ -84,8 +88,8 @@ exports.getStudent = async (req, res) => {
     const [students] = await db.query(
       'SELECT s.*, u.name, u.email, u.phone, u.is_active, u.created_at, c.name as class_name, c.grade_level ' +
       'FROM students s JOIN users u ON s.user_id = u.id JOIN classes c ON s.class_id = c.id ' +
-      'WHERE s.id = ?',
-      [req.params.id]
+      'WHERE s.id = ? AND u.school_id = ?',
+      [req.params.id, req.user.schoolId]
     );
 
     if (students.length === 0) {
@@ -102,7 +106,22 @@ exports.getStudent = async (req, res) => {
 exports.updateStudent = async (req, res) => {
   const db = getDb();
   try {
+    const [verify] = await db.query(
+      'SELECT u.id FROM students s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND u.school_id = ?',
+      [req.params.id, req.user.schoolId]
+    );
+    if (verify.length === 0) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
     const { classId, enrollmentDate, parentName, parentPhone } = req.body;
+
+    if (classId) {
+      const [classes] = await db.query('SELECT school_id FROM classes WHERE id = ?', [classId]);
+      if (classes.length === 0 || classes[0].school_id !== req.user.schoolId) {
+        return res.status(403).json({ error: 'Invalid class' });
+      }
+    }
 
     await db.query(
       'UPDATE students SET class_id = COALESCE(?, class_id), enrollment_date = COALESCE(?, enrollment_date), parent_name = COALESCE(?, parent_name), parent_phone = COALESCE(?, parent_phone) WHERE id = ?',
@@ -119,7 +138,10 @@ exports.updateStudent = async (req, res) => {
 exports.deleteStudent = async (req, res) => {
   const db = getDb();
   try {
-    const [students] = await db.query('SELECT user_id FROM students WHERE id = ?', [req.params.id]);
+    const [students] = await db.query(
+      'SELECT s.user_id FROM students s JOIN users u ON s.user_id = u.id WHERE s.id = ? AND u.school_id = ?',
+      [req.params.id, req.user.schoolId]
+    );
     if (students.length === 0) {
       return res.status(404).json({ error: 'Student not found' });
     }
@@ -142,9 +164,11 @@ exports.getStudentResults = async (req, res) => {
       'FROM exam_answers ea ' +
       'JOIN exams e ON ea.exam_id = e.id ' +
       'JOIN subjects s ON e.subject_id = s.id ' +
-      'WHERE ea.student_id = ? ' +
+      'JOIN students st ON ea.student_id = st.id ' +
+      'JOIN users u ON st.user_id = u.id ' +
+      'WHERE ea.student_id = ? AND e.school_id = ? AND u.school_id = ? ' +
       'ORDER BY ea.created_at DESC',
-      [req.params.id]
+      [req.params.id, req.user.schoolId, req.user.schoolId]
     );
 
     res.json({ results });
@@ -160,11 +184,11 @@ exports.getStudentReportCard = async (req, res) => {
     const [reports] = await db.query(
       'SELECT tr.*, u.name as student_name, s.student_code, c.name as class_name ' +
       'FROM term_reports tr ' +
-      'JOIN students s ON tr.student_id = s.id ' +
-      'JOIN users u ON s.user_id = u.id ' +
-      'JOIN classes c ON s.class_id = c.id ' +
-      'WHERE tr.student_id = ? AND tr.term = ? AND tr.academic_year = ?',
-      [req.params.id, req.query.term || 'Term 1', req.query.academicYear || '2024-2025']
+      'JOIN students st ON tr.student_id = st.id ' +
+      'JOIN users u ON st.user_id = u.id ' +
+      'JOIN classes c ON st.class_id = c.id ' +
+      'WHERE tr.student_id = ? AND tr.term = ? AND tr.academic_year = ? AND tr.school_id = ? AND u.school_id = ?',
+      [req.params.id, req.query.term || 'Term 1', req.query.academicYear || '2024-2025', req.user.schoolId, req.user.schoolId]
     );
 
     if (reports.length === 0) {

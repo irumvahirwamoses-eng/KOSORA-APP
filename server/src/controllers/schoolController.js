@@ -29,8 +29,8 @@ exports.createSchool = async (req, res) => {
     const passwordHash = await bcrypt.hash(adminPassword, salt);
 
     const [adminResult] = await db.query(
-      'INSERT INTO users (school_id, name, email, password_hash, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
-      [schoolResult.insertId, adminName, adminEmail, passwordHash, adminPhone, 'admin']
+      'INSERT INTO users (school_id, name, email, password_hash, phone, role, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [schoolResult.insertId, adminName, adminEmail, passwordHash, adminPhone, 'admin', true]
     );
 
     res.status(201).json({

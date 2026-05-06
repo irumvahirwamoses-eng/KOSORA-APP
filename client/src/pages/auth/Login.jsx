@@ -15,9 +15,9 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const user = await login(email, password);
+      await login(email, password);
       toast.success('Login successful!');
-      navigate(`/${roleToPath(user.role)}/dashboard`, { replace: true });
+      window.location.href = '/';
     } catch (err) {
       toast.error(err.response?.data?.error || 'Login failed');
     } finally {
@@ -68,15 +68,16 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center mt-6 text-gray-600">
+        {/* <p className="text-center mt-6 text-gray-600">
           Don't have an account?{' '}
           <Link to="/register" className="text-kosora-600 font-medium hover:text-kosora-700">Sign up</Link>
-        </p>
+        </p> */}
 
-        <div className="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
+        {/* <div className="mt-6 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 text-center">
           <p className="font-medium mb-1">Super Admin Credentials:</p>
           <p>Email: admin@kosora.com | Password: admin123</p>
-        </div>
+        </div> */}
+        <p className="text-xs mt-2">Developed by Irumva Hirwa Moses</p>
       </div>
     </div>
   );

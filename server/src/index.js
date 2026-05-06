@@ -12,6 +12,7 @@ const examRoutes = require('./routes/examRoutes');
 const scannerRoutes = require('./routes/scannerRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/exams', examRoutes);
 app.use('/api/scanner', scannerRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/applications', applicationRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -42,7 +44,7 @@ app.get('/api/health', (req, res) => {
 
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {
   console.log(`Kosora Server running on port ${PORT}`);
