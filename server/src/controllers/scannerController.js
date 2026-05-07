@@ -215,15 +215,23 @@ exports.processScanDirect = async (req, res) => {
 exports.getScanResults = async (req, res) => {
   const db = getDb();
   try {
+    let whereClause = 'WHERE os.exam_id = ? AND e.school_id = ?';
+    const params = [req.params.examId, req.user.schoolId];
+
+    if (req.user.role === 'teacher') {
+      whereClause += ' AND e.teacher_id = ?';
+      params.push(req.user.id);
+    }
+
     const [scans] = await db.query(
       'SELECT os.*, u.name as student_name, e.title as exam_title ' +
       'FROM omr_scans os ' +
       'LEFT JOIN students st ON os.student_id = st.id ' +
       'LEFT JOIN users u ON st.user_id = u.id ' +
       'JOIN exams e ON os.exam_id = e.id ' +
-      'WHERE os.exam_id = ? AND e.school_id = ? ' +
-      'ORDER BY os.created_at DESC',
-      [req.params.examId, req.user.schoolId]
+      whereClause +
+      ' ORDER BY os.created_at DESC',
+      params
     );
 
     res.json({ scans });

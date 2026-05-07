@@ -54,7 +54,10 @@ cd scanner
 pip install -r requirements.txt
 # Install Tesseract OCR: https://github.com/tesseract-ocr/tesseract
 python server.py
+
 ```
+
+pip install flask flask-cors opencv-python numpy Pillow
 
 ### 5. Ollama (AI Exam Generation)
 
@@ -62,7 +65,13 @@ python server.py
 # Install Ollama: https://ollama.ai
 ollama pull llama3
 # Ollama runs on http://localhost:11434 by default
+
+
 ```
+
+saint kizito: bosco@gmail.com,bosco123,
+teacher:revocate@gmail.com,revocate123,
+student:moses@gmail.com,student123
 
 ## User Roles
 

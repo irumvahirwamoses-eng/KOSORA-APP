@@ -34,7 +34,10 @@ const TeacherDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Welcome, {user?.name} {user?.schoolName ? `— ${user.schoolName}` : ''}</h2>
+      <div>
+        <h2 className="text-2xl font-bold">Welcome, {user?.name} {user?.schoolName ? `— ${user.schoolName}` : ''}</h2>
+        <p className="text-gray-500 mt-1">Teacher Dashboard</p>
+      </div>
 
       {myClasses.length > 0 && (
         <div className="card">

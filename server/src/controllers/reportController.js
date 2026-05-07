@@ -355,23 +355,35 @@ exports.getDashboardStats = async (req, res) => {
   try {
     const schoolId = req.user.schoolId;
 
-    const [totalStudents] = await db.query(
-      'SELECT COUNT(*) as count FROM users WHERE school_id = ? AND role = ?', [schoolId, 'student']
-    );
-    const [totalTeachers] = await db.query(
-      'SELECT COUNT(*) as count FROM users WHERE school_id = ? AND role = ?', [schoolId, 'teacher']
-    );
-    const [totalExams] = await db.query(
-      'SELECT COUNT(*) as count FROM exams WHERE school_id = ?', [schoolId]
-    );
-    const [totalMaterials] = await db.query(
-      'SELECT COUNT(*) as count FROM materials WHERE school_id = ?', [schoolId]
-    );
-    const [recentExams] = await db.query(
-      'SELECT e.title, e.exam_code, e.status, e.created_at, s.name as subject_name, c.name as class_name ' +
-      'FROM exams e JOIN subjects s ON e.subject_id = s.id JOIN classes c ON e.class_id = c.id ' +
-      'WHERE e.school_id = ? ORDER BY e.created_at DESC LIMIT 5', [schoolId]
-    );
+    let studentQuery = 'SELECT COUNT(*) as count FROM users WHERE school_id = ? AND role = ?';
+    let studentParams = [schoolId, 'student'];
+    let teacherQuery = 'SELECT COUNT(*) as count FROM users WHERE school_id = ? AND role = ?';
+    let teacherParams = [schoolId, 'teacher'];
+    let examQuery = 'SELECT COUNT(*) as count FROM exams WHERE school_id = ?';
+    let examParams = [schoolId];
+    let materialQuery = 'SELECT COUNT(*) as count FROM materials WHERE school_id = ?';
+    let materialParams = [schoolId];
+    let recentQuery = 'SELECT e.title, e.exam_code, e.status, e.created_at, s.name as subject_name, c.name as class_name FROM exams e JOIN subjects s ON e.subject_id = s.id JOIN classes c ON e.class_id = c.id WHERE e.school_id = ? ORDER BY e.created_at DESC LIMIT 5';
+    let recentParams = [schoolId];
+
+    if (req.user.role === 'teacher') {
+      studentQuery = 'SELECT COUNT(DISTINCT st.id) as count FROM students st JOIN classes c ON st.class_id = c.id WHERE c.school_id = ? AND (c.teacher_id = ? OR c.id IN (SELECT class_id FROM class_subjects WHERE teacher_id = ?))';
+      studentParams = [schoolId, req.user.id, req.user.id];
+      teacherQuery = 'SELECT 1 as count';
+      teacherParams = [];
+      examQuery = 'SELECT COUNT(*) as count FROM exams WHERE school_id = ? AND teacher_id = ?';
+      examParams = [schoolId, req.user.id];
+      materialQuery = 'SELECT COUNT(*) as count FROM materials WHERE school_id = ? AND teacher_id = ?';
+      materialParams = [schoolId, req.user.id];
+      recentQuery = 'SELECT e.title, e.exam_code, e.status, e.created_at, s.name as subject_name, c.name as class_name FROM exams e JOIN subjects s ON e.subject_id = s.id JOIN classes c ON e.class_id = c.id WHERE e.school_id = ? AND e.teacher_id = ? ORDER BY e.created_at DESC LIMIT 5';
+      recentParams = [schoolId, req.user.id];
+    }
+
+    const [totalStudents] = await db.query(studentQuery, studentParams);
+    const [totalTeachers] = await db.query(teacherQuery, teacherParams);
+    const [totalExams] = await db.query(examQuery, examParams);
+    const [totalMaterials] = await db.query(materialQuery, materialParams);
+    const [recentExams] = await db.query(recentQuery, recentParams);
 
     res.json({
       stats: {

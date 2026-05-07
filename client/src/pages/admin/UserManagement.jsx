@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { FiPlus, FiX } from 'react-icons/fi';
+import { FiPlus, FiX, FiSearch } from 'react-icons/fi';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', role: 'teacher' });
 
@@ -14,10 +15,23 @@ const UserManagement = () => {
 
   const fetch = async () => {
     try {
-      const res = await api.get(`/api/school/users?limit=100${filter ? '&role=' + filter : ''}`);
+      let url = `/api/school/users?limit=100`;
+      if (filter) url += `&role=${filter}`;
+      if (search) url += `&search=${encodeURIComponent(search)}`;
+      const res = await api.get(url);
       setUsers(res.data.users || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  };
+
+  const handleFilterChange = (e) => {
+    setFilter(e.target.value);
+    setSearch('');
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetch();
   };
 
   const toggle = async (id, active) => {
@@ -42,9 +56,13 @@ const UserManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">User Management</h2>
         <div className="flex gap-3">
-          <select className="px-3 py-2 border rounded-lg" value={filter} onChange={(e) => { setFilter(e.target.value); fetch(); }}>
+          <select className="px-3 py-2 border rounded-lg" value={filter} onChange={handleFilterChange}>
             <option value="">All</option><option value="teacher">Teachers</option><option value="student">Students</option><option value="admin">Admins</option>
           </select>
+          <form onSubmit={handleSearch} className="relative">
+            <FiSearch className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+            <input className="pl-9 pr-3 py-2 border rounded-lg w-48" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </form>
           <button onClick={() => setShowModal(true)} className="bg-kosora-600 text-white px-4 py-2 rounded-lg hover:bg-kosora-700 flex items-center gap-2">
             <FiPlus className="w-4 h-4" /> Add Teacher/Admin
           </button>

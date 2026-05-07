@@ -146,6 +146,11 @@ exports.getExams = async (req, res) => {
     let query = 'SELECT e.*, u.name as teacher_name, s.name as subject_name, c.name as class_name, (SELECT COUNT(*) FROM questions WHERE exam_id = e.id) as question_count FROM exams e JOIN users u ON e.teacher_id = u.id JOIN subjects s ON e.subject_id = s.id JOIN classes c ON e.class_id = c.id WHERE e.school_id = ?';
     const params = [schoolId];
 
+    if (req.user.role === 'teacher') {
+      query += ' AND e.teacher_id = ?';
+      params.push(req.user.id);
+    }
+
     if (classId) {
       query += ' AND e.class_id = ?';
       params.push(classId);

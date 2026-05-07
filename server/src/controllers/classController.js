@@ -53,10 +53,18 @@ exports.createClass = async (req, res) => {
 exports.getClasses = async (req, res) => {
   const db = getDb();
   try {
-    const [classes] = await db.query(
-      'SELECT c.*, u.name as teacher_name FROM classes c LEFT JOIN users u ON c.teacher_id = u.id WHERE c.school_id = ? ORDER BY c.grade_level ASC',
-      [req.user.schoolId]
-    );
+    let classes;
+    if (req.user.role === 'teacher') {
+      [classes] = await db.query(
+        'SELECT c.*, u.name as teacher_name FROM classes c LEFT JOIN users u ON c.teacher_id = u.id WHERE c.school_id = ? AND (c.teacher_id = ? OR c.id IN (SELECT class_id FROM class_subjects WHERE teacher_id = ?)) ORDER BY c.grade_level ASC',
+        [req.user.schoolId, req.user.id, req.user.id]
+      );
+    } else {
+      [classes] = await db.query(
+        'SELECT c.*, u.name as teacher_name FROM classes c LEFT JOIN users u ON c.teacher_id = u.id WHERE c.school_id = ? ORDER BY c.grade_level ASC',
+        [req.user.schoolId]
+      );
+    }
 
     res.json({ classes });
   } catch (err) {
@@ -116,10 +124,21 @@ exports.createSubject = async (req, res) => {
 exports.getSubjects = async (req, res) => {
   const db = getDb();
   try {
-    const [subjects] = await db.query(
-      'SELECT * FROM subjects WHERE school_id = ? ORDER BY name ASC',
-      [req.user.schoolId]
-    );
+    let subjects;
+    if (req.user.role === 'teacher') {
+      [subjects] = await db.query(
+        'SELECT DISTINCT s.* FROM subjects s ' +
+        'LEFT JOIN class_subjects cs ON s.id = cs.subject_id ' +
+        'WHERE s.school_id = ? AND (cs.teacher_id = ? OR s.id IN (SELECT subject_id FROM materials WHERE teacher_id = ?)) ' +
+        'ORDER BY s.name ASC',
+        [req.user.schoolId, req.user.id, req.user.id]
+      );
+    } else {
+      [subjects] = await db.query(
+        'SELECT * FROM subjects WHERE school_id = ? ORDER BY name ASC',
+        [req.user.schoolId]
+      );
+    }
 
     res.json({ subjects });
   } catch (err) {
@@ -151,7 +170,7 @@ exports.assignSubjectToClass = async (req, res) => {
 exports.getUserManagement = async (req, res) => {
   const db = getDb();
   try {
-    const { role, page = 1, limit = 20 } = req.query;
+    const { role, search, page = 1, limit = 20 } = req.query;
     const offset = (page - 1) * limit;
 
     let query = 'SELECT id, name, email, phone, role, is_active, created_at FROM users WHERE school_id = ?';
@@ -161,15 +180,28 @@ exports.getUserManagement = async (req, res) => {
       query += ' AND role = ?';
       params.push(role);
     }
+    if (search) {
+      query += ' AND (name LIKE ? OR email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(parseInt(limit), parseInt(offset));
 
     const [users] = await db.query(query, params);
-    const [countResult] = await db.query(
-      'SELECT COUNT(*) as total FROM users WHERE school_id = ?',
-      [req.user.schoolId]
-    );
+    let countQuery = 'SELECT COUNT(*) as total FROM users WHERE school_id = ?';
+    let countParams = [req.user.schoolId];
+
+    if (role) {
+      countQuery += ' AND role = ?';
+      countParams.push(role);
+    }
+    if (search) {
+      countQuery += ' AND (name LIKE ? OR email LIKE ?)';
+      countParams.push(`%${search}%`, `%${search}%`);
+    }
+
+    const [countResult] = await db.query(countQuery, countParams);
 
     res.json({
       users,

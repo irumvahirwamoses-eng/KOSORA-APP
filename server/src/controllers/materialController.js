@@ -70,6 +70,11 @@ exports.getMaterials = async (req, res) => {
     let query = 'SELECT m.*, u.name as teacher_name, s.name as subject_name FROM materials m JOIN users u ON m.teacher_id = u.id JOIN subjects s ON m.subject_id = s.id WHERE m.school_id = ?';
     const params = [schoolId];
 
+    if (req.user.role === 'teacher') {
+      query += ' AND m.teacher_id = ?';
+      params.push(req.user.id);
+    }
+
     if (subjectId) {
       query += ' AND m.subject_id = ?';
       params.push(subjectId);
