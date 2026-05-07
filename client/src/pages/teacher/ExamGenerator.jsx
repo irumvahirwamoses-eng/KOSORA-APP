@@ -225,8 +225,7 @@ const ExamGenerator = () => {
           <h3 className="text-lg font-semibold mb-4">Step 2: Generate Questions with AI</h3>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800">Requires <strong>Ollama</strong> installed and running. If not installed:</p>
-            <p className="text-xs text-blue-700 mt-1">1. Download from <a href="https://ollama.ai" target="_blank" className="underline">ollama.ai</a> &nbsp; 2. Run <code className="bg-blue-100 px-1 rounded">ollama pull llama3</code></p>
+            <p className="text-sm text-blue-800">AI-powered question generation using <strong>Groq API</strong> (Llama 3.1). No local installation needed.</p>
           </div>
 
           <div className="space-y-4">

@@ -5,10 +5,6 @@ import numpy as np
 import json
 import os
 from werkzeug.utils import secure_filename
-import pytesseract
-
-# Windows Tesseract path - adjust if installed elsewhere
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 app = Flask(__name__)
 CORS(app)

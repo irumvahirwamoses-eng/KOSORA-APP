@@ -57,8 +57,8 @@ exports.generateExamQuestions = async (req, res) => {
 
     res.json({ questions: generatedQuestions });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to generate questions' });
+    console.error('Exam generation error:', err.message);
+    res.status(500).json({ error: err.message || 'Failed to generate questions' });
   }
 };
 

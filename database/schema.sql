@@ -211,6 +211,23 @@ CREATE TABLE system_settings (
     UNIQUE KEY unique_school_setting (school_id, setting_key)
 );
 
+CREATE TABLE IF NOT EXISTS school_applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    school_name VARCHAR(255) NOT NULL,
+    contact_person VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    location VARCHAR(255),
+    school_type ENUM('primary', 'secondary', 'both') DEFAULT 'both',
+    student_count INT,
+    message TEXT,
+    status ENUM('pending', 'approved', 'rejected', 'registered') DEFAULT 'pending',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_school_applications_status ON school_applications(status);
+
 -- Indexes for performance
 CREATE INDEX idx_users_school_role ON users(school_id, role);
 CREATE INDEX idx_users_email ON users(email);
